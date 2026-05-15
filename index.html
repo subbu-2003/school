@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mahesh School ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a1628;
+    --royal: #1a3a6e;
+    --gold: #c9a227;
+    --gold-light: #f0c040;
+    --cream: #fdf8ee;
+    --white: #ffffff;
+    --text: #1a1a2e;
+    --muted: #6b7a99;
+    --success: #27ae60;
+    --danger: #e74c3c;
+    --warning: #f39c12;
+    --info: #2980b9;
+    --sidebar-w: 260px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--text); display:flex; min-height:100vh; overflow-x:hidden; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width:var(--sidebar-w); background:var(--navy); color:#fff; position:fixed; top:0; left:0; height:100vh;
+    display:flex; flex-direction:column; z-index:100; transition:.3s; overflow-y:auto;
+  }
+  .school-brand { padding:24px 20px 16px; border-bottom:1px solid rgba(201,162,39,.2); }
+  .school-logo { width:48px; height:48px; background:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display'; font-weight:900; font-size:20px; color:var(--navy); margin-bottom:10px; }
+  .school-brand h2 { font-family:'Playfair Display'; font-size:18px; color:var(--gold); }
+  .school-brand p { font-size:11px; color:var(--muted); margin-top:2px; }
+
+  .nav-section { padding:12px 0; }
+  .nav-label { font-size:10px; font-weight:600; color:var(--muted); letter-spacing:1.5px; padding:8px 20px 4px; text-transform:uppercase; }
+  .nav-item {
+    display:flex; align-items:center; gap:12px; padding:10px 20px; cursor:pointer;
+    font-size:13.5px; font-weight:500; color:rgba(255,255,255,.7); border-left:3px solid transparent;
+    transition:.2s; text-decoration:none;
+  }
+  .nav-item:hover { background:rgba(201,162,39,.1); color:#fff; border-left-color:var(--gold); }
+  .nav-item.active { background:rgba(201,162,39,.15); color:var(--gold); border-left-color:var(--gold); }
+  .nav-item .icon { font-size:17px; width:22px; text-align:center; }
+
+  /* ── TOPBAR ── */
+  #topbar {
+    position:fixed; top:0; left:var(--sidebar-w); right:0; height:64px;
+    background:#fff; border-bottom:1px solid #e8e0d0; display:flex; align-items:center;
+    justify-content:space-between; padding:0 28px; z-index:99; box-shadow:0 2px 8px rgba(0,0,0,.05);
+  }
+  .page-title { font-family:'Playfair Display'; font-size:20px; font-weight:700; color:var(--navy); }
+  .topbar-right { display:flex; align-items:center; gap:16px; }
+  .topbar-btn { width:38px; height:38px; border-radius:50%; border:none; background:var(--cream); cursor:pointer; font-size:17px; display:flex; align-items:center; justify-content:center; position:relative; }
+  .badge { position:absolute; top:4px; right:4px; width:8px; height:8px; background:var(--danger); border-radius:50%; }
+  .user-avatar { width:38px; height:38px; background:var(--royal); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+
+  /* ── MAIN ── */
+  #main { margin-left:var(--sidebar-w); margin-top:64px; padding:28px; flex:1; min-height:calc(100vh - 64px); }
+  .page { display:none; }
+  .page.active { display:block; animation:fadeIn .3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── CARDS ── */
+  .stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:18px; margin-bottom:28px; }
+  .stat-card {
+    background:#fff; border-radius:16px; padding:22px; position:relative; overflow:hidden;
+    box-shadow:0 2px 12px rgba(0,0,0,.06); border:1px solid rgba(0,0,0,.05); cursor:pointer;
+    transition:.25s;
+  }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.1); }
+  .stat-card .accent { position:absolute; top:0; right:0; width:80px; height:80px; border-radius:0 16px 0 80px; opacity:.15; }
+  .stat-card .label { font-size:12px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.8px; }
+  .stat-card .value { font-family:'Playfair Display'; font-size:34px; font-weight:700; margin:6px 0 2px; }
+  .stat-card .change { font-size:12px; color:var(--success); }
+  .stat-card .icon-wrap { font-size:28px; margin-bottom:10px; }
+
+  /* ── SECTION TITLE ── */
+  .section-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .section-hdr h3 { font-family:'Playfair Display'; font-size:18px; color:var(--navy); }
+  .btn { padding:9px 18px; border-radius:8px; border:none; cursor:pointer; font-family:'DM Sans'; font-size:13px; font-weight:600; transition:.2s; }
+  .btn-primary { background:var(--royal); color:#fff; }
+  .btn-primary:hover { background:var(--navy); }
+  .btn-gold { background:var(--gold); color:var(--navy); }
+  .btn-gold:hover { background:var(--gold-light); }
+  .btn-sm { padding:6px 12px; font-size:12px; }
+  .btn-danger { background:var(--danger); color:#fff; }
+  .btn-success { background:var(--success); color:#fff; }
+
+  /* ── TABLE ── */
+  .table-wrap { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.06); border:1px solid #eee; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { background:var(--navy); color:#fff; padding:13px 16px; font-size:12px; font-weight:600; text-align:left; letter-spacing:.6px; }
+  tbody tr { border-bottom:1px solid #f0ebe0; transition:.15s; }
+  tbody tr:hover { background:#fdf8ee; }
+  tbody td { padding:12px 16px; font-size:13.5px; }
+  .badge-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .pill-green { background:#d4f5e2; color:#1a7a45; }
+  .pill-red { background:#fde8e8; color:#b71c1c; }
+  .pill-orange { background:#fdebd0; color:#b7601c; }
+  .pill-blue { background:#dbeafe; color:#1a4c9e; }
+
+  /* ── FORM ── */
+  .form-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding:10px 14px; border:1.5px solid #e0d8ca; border-radius:8px; font-family:'DM Sans'; font-size:13.5px;
+    background:#fff; color:var(--text); transition:.2s; outline:none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--royal); box-shadow:0 0 0 3px rgba(26,58,110,.08); }
+  .form-card { background:#fff; border-radius:14px; padding:24px; box-shadow:0 2px 12px rgba(0,0,0,.06); border:1px solid #eee; margin-bottom:22px; }
+  .form-card h4 { font-family:'Playfair Display'; font-size:16px; color:var(--navy); margin-bottom:18px; padding-bottom:10px; border-bottom:2px solid var(--gold); display:inline-block; }
+
+  /* ── TIMETABLE ── */
+  .timetable { border-radius:14px; overflow:hidden; border:1px solid #ddd; }
+  .timetable th { background:var(--royal); color:#fff; padding:11px 14px; font-size:12px; font-weight:600; text-align:center; }
+  .timetable td { padding:10px 14px; border:1px solid #eee; font-size:12.5px; text-align:center; }
+  .tt-period { background:#eef4ff; border-radius:6px; padding:4px 8px; font-weight:600; color:var(--royal); font-size:12px; }
+  .tt-break { background:#fff8e1; color:#b7601c; font-weight:600; border-radius:6px; padding:4px 8px; font-size:12px; }
+
+  /* ── CHART AREA ── */
+  .chart-area { display:flex; align-items:flex-end; gap:10px; height:140px; padding:12px 0 0; }
+  .bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+  .bar { width:100%; background:var(--royal); border-radius:6px 6px 0 0; transition:.8s; min-height:4px; }
+  .bar-lbl { font-size:11px; color:var(--muted); font-weight:500; }
+  .bar-val { font-size:11px; font-weight:700; color:var(--navy); }
+
+  /* ── NOTICE BOARD ── */
+  .notice-list { list-style:none; }
+  .notice-list li { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid #f0ebe0; }
+  .notice-list li:last-child { border-bottom:none; }
+  .notice-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .notice-list .title { font-size:13.5px; font-weight:500; }
+  .notice-list .date { font-size:11px; color:var(--muted); }
+
+  /* ── EVENT CARD ── */
+  .event-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px; }
+  .event-card { background:#fff; border-radius:12px; overflow:hidden; border:1px solid #eee; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+  .event-hdr { height:8px; }
+  .event-body { padding:16px; }
+  .event-body .ev-title { font-weight:700; font-size:14px; margin-bottom:4px; }
+  .event-body .ev-date { font-size:12px; color:var(--muted); }
+  .event-body .ev-desc { font-size:12.5px; margin-top:8px; color:#555; }
+
+  /* ── PROGRESS BAR ── */
+  .progress { height:8px; background:#eee; border-radius:20px; overflow:hidden; margin-top:4px; }
+  .progress-fill { height:100%; border-radius:20px; transition:.8s; }
+
+  /* login */
+  #login-page { display:flex; align-items:center; justify-content:center; min-height:100vh; background:linear-gradient(135deg, var(--navy) 0%, var(--royal) 60%, #2a5298 100%); position:fixed; top:0;left:0;right:0;bottom:0; z-index:200; }
+  .login-box { background:#fff; border-radius:20px; padding:48px 42px; width:400px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+  .login-logo { text-align:center; margin-bottom:28px; }
+  .login-logo .circle { width:70px; height:70px; background:var(--navy); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'Playfair Display'; font-size:28px; font-weight:900; color:var(--gold); margin-bottom:12px; }
+  .login-logo h1 { font-family:'Playfair Display'; font-size:22px; color:var(--navy); }
+  .login-logo p { font-size:12px; color:var(--muted); }
+  .role-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:22px; }
+  .role-tab { padding:9px; border:2px solid #eee; border-radius:8px; text-align:center; cursor:pointer; font-size:13px; font-weight:600; color:var(--muted); transition:.2s; }
+  .role-tab.active { border-color:var(--royal); color:var(--royal); background:#eef4ff; }
+  .login-input { width:100%; padding:11px 14px; border:1.5px solid #e0d8ca; border-radius:8px; font-family:'DM Sans'; font-size:14px; margin-bottom:14px; outline:none; transition:.2s; }
+  .login-input:focus { border-color:var(--royal); }
+  .login-btn { width:100%; padding:13px; background:var(--navy); color:#fff; border:none; border-radius:8px; font-family:'Playfair Display'; font-size:16px; cursor:pointer; transition:.2s; }
+  .login-btn:hover { background:var(--royal); }
+
+  /* receipt */
+  .receipt { background:#fff; border:2px dashed var(--gold); border-radius:14px; padding:24px; max-width:420px; }
+  .receipt-hdr { text-align:center; border-bottom:2px solid var(--gold); padding-bottom:14px; margin-bottom:14px; }
+  .receipt-row { display:flex; justify-content:space-between; font-size:13.5px; padding:4px 0; }
+  .receipt-row.total { font-weight:700; border-top:1px solid #eee; margin-top:8px; padding-top:8px; font-size:15px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#c9a22766;border-radius:3px}
+  
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  @media(max-width:768px){ .two-col{grid-template-columns:1fr} #sidebar{transform:translateX(-100%)} #main,#topbar{margin-left:0;left:0} }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="circle">M</div>
+      <h1>Mahesh School</h1>
+      <p>School ERP Management System</p>
+    </div>
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="setRole(this,'Admin')">🛡️ Admin</div>
+      <div class="role-tab" onclick="setRole(this,'Teacher')">📚 Teacher</div>
+      <div class="role-tab" onclick="setRole(this,'Student')">🎓 Student</div>
+      <div class="role-tab" onclick="setRole(this,'Parent')">👪 Parent</div>
+    </div>
+    <input class="login-input" type="text" placeholder="Username" id="l-user" value="admin">
+    <input class="login-input" type="password" placeholder="Password" id="l-pass" value="admin123">
+    <button class="login-btn" onclick="doLogin()">Login →</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="school-brand">
+    <div class="school-logo">M</div>
+    <h2>Mahesh School</h2>
+    <p>ERP Management System</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">🏠</span> Dashboard</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">People</div>
+    <div class="nav-item" onclick="showPage('students',this)"><span class="icon">🎓</span> Student Management</div>
+    <div class="nav-item" onclick="showPage('teachers',this)"><span class="icon">👨‍🏫</span> Teacher Management</div>
+    <div class="nav-item" onclick="showPage('parents',this)"><span class="icon">👪</span> Parent Portal</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Academic</div>
+    <div class="nav-item" onclick="showPage('attendance',this)"><span class="icon">📋</span> Attendance</div>
+    <div class="nav-item" onclick="showPage('exams',this)"><span class="icon">📝</span> Exam Management</div>
+    <div class="nav-item" onclick="showPage('timetable',this)"><span class="icon">🗓️</span> Timetable</div>
+    <div class="nav-item" onclick="showPage('subjects',this)"><span class="icon">📚</span> Subjects</div>
+    <div class="nav-item" onclick="showPage('homework',this)"><span class="icon">📄</span> Homework</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Finance</div>
+    <div class="nav-item" onclick="showPage('fees',this)"><span class="icon">💰</span> Fees Management</div>
+    <div class="nav-item" onclick="showPage('accounts',this)"><span class="icon">📊</span> Accounts</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Facilities</div>
+    <div class="nav-item" onclick="showPage('library',this)"><span class="icon">📖</span> Library</div>
+    <div class="nav-item" onclick="showPage('transport',this)"><span class="icon">🚌</span> Transport</div>
+    <div class="nav-item" onclick="showPage('hostel',this)"><span class="icon">🏠</span> Hostel</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Communication</div>
+    <div class="nav-item" onclick="showPage('communication',this)"><span class="icon">📣</span> Communication</div>
+    <div class="nav-item" onclick="showPage('events',this)"><span class="icon">🎉</span> Events & Notices</div>
+  </div>
+</nav>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="page-title" id="topbar-title">Dashboard</div>
+  <div class="topbar-right">
+    <button class="topbar-btn">🔔<span class="badge"></span></button>
+    <button class="topbar-btn">✉️</button>
+    <div class="user-avatar" title="Admin">AD</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="stat-grid">
+    <div class="stat-card"><div class="accent" style="background:#1a3a6e"></div><div class="icon-wrap">🎓</div><div class="label">Total Students</div><div class="value" style="color:var(--royal)">1,248</div><div class="change">▲ 48 this term</div></div>
+    <div class="stat-card"><div class="accent" style="background:#c9a227"></div><div class="icon-wrap">👨‍🏫</div><div class="label">Total Teachers</div><div class="value" style="color:var(--gold)">86</div><div class="change">▲ 4 new joins</div></div>
+    <div class="stat-card"><div class="accent" style="background:#27ae60"></div><div class="icon-wrap">✅</div><div class="label">Today Attendance</div><div class="value" style="color:var(--success)">94%</div><div class="change">1,173 present</div></div>
+    <div class="stat-card"><div class="accent" style="background:#e74c3c"></div><div class="icon-wrap">💰</div><div class="label">Fees Collected</div><div class="value" style="color:var(--danger)">₹4.2L</div><div class="change">This month</div></div>
+    <div class="stat-card"><div class="accent" style="background:#f39c12"></div><div class="icon-wrap">⏳</div><div class="label">Pending Fees</div><div class="value" style="color:var(--warning)">₹1.1L</div><div class="change">142 students</div></div>
+    <div class="stat-card"><div class="accent" style="background:#2980b9"></div><div class="icon-wrap">📖</div><div class="label">Books Issued</div><div class="value" style="color:var(--info)">312</div><div class="change">28 overdue</div></div>
+  </div>
+
+  <div class="two-col">
+    <div class="form-card">
+      <h4>Monthly Attendance Overview</h4>
+      <div class="chart-area" id="att-chart"></div>
+      <div style="display:flex;gap:16px;margin-top:8px">
+        <span style="font-size:12px;color:var(--muted)"><span style="display:inline-block;width:10px;height:10px;background:var(--royal);border-radius:2px;margin-right:4px"></span>Students</span>
+        <span style="font-size:12px;color:var(--muted)"><span style="display:inline-block;width:10px;height:10px;background:var(--gold);border-radius:2px;margin-right:4px"></span>Teachers</span>
+      </div>
+    </div>
+    <div class="form-card">
+      <h4>Fees Collection Status</h4>
+      <div style="margin-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Tuition Fees</span><span style="font-weight:700">82%</span></div>
+        <div class="progress"><div class="progress-fill" style="width:82%;background:var(--royal)"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin:10px 0 4px"><span>Hostel Fees</span><span style="font-weight:700">70%</span></div>
+        <div class="progress"><div class="progress-fill" style="width:70%;background:var(--gold)"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin:10px 0 4px"><span>Transport Fees</span><span style="font-weight:700">90%</span></div>
+        <div class="progress"><div class="progress-fill" style="width:90%;background:var(--success)"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin:10px 0 4px"><span>Exam Fees</span><span style="font-weight:700">60%</span></div>
+        <div class="progress"><div class="progress-fill" style="width:60%;background:var(--danger)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="form-card">
+      <h4>📌 Notice Board</h4>
+      <ul class="notice-list">
+        <li><span class="notice-dot" style="background:var(--danger)"></span><div><div class="title">Final Exam Schedule Released</div><div class="date">May 15, 2025</div></div></li>
+        <li><span class="notice-dot" style="background:var(--gold)"></span><div><div class="title">Annual Day Celebration – June 10</div><div class="date">May 13, 2025</div></div></li>
+        <li><span class="notice-dot" style="background:var(--royal)"></span><div><div class="title">Sports Day Registration Open</div><div class="date">May 10, 2025</div></div></li>
+        <li><span class="notice-dot" style="background:var(--success)"></span><div><div class="title">Summer vacation from May 20</div><div class="date">May 8, 2025</div></div></li>
+        <li><span class="notice-dot" style="background:var(--muted)"></span><div><div class="title">Library books return due May 18</div><div class="date">May 5, 2025</div></div></li>
+      </ul>
+    </div>
+    <div class="form-card">
+      <h4>🎉 Upcoming Events</h4>
+      <div class="event-cards">
+        <div class="event-card"><div class="event-hdr" style="background:var(--royal)"></div><div class="event-body"><div class="ev-title">Final Examinations</div><div class="ev-date">📅 May 20 – June 2</div><div class="ev-desc">Class 10 & 12 board examinations</div></div></div>
+        <div class="event-card"><div class="event-hdr" style="background:var(--gold)"></div><div class="event-body"><div class="ev-title">Annual Day</div><div class="ev-date">📅 June 10, 2025</div><div class="ev-desc">Cultural programs & prize distribution</div></div></div>
+        <div class="event-card"><div class="event-hdr" style="background:var(--success)"></div><div class="event-body"><div class="ev-title">Sports Meet</div><div class="ev-date">📅 June 15, 2025</div><div class="ev-desc">Inter-house sports competition</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENTS -->
+<div class="page" id="page-students">
+  <div class="section-hdr"><h3>Student Management</h3><button class="btn btn-primary" onclick="toggleForm('add-student-form')">+ Add Student</button></div>
+  <div id="add-student-form" style="display:none" class="form-card">
+    <h4>Add New Student</h4>
+    <div class="form-grid">
+      <div class="form-group"><label>First Name</label><input placeholder="Enter first name"></div>
+      <div class="form-group"><label>Last Name</label><input placeholder="Enter last name"></div>
+      <div class="form-group"><label>Admission No.</label><input placeholder="MSS-2025-XXX"></div>
+      <div class="form-group"><label>Class</label><select><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Class 9</option><option>Class 10</option><option>Class 11</option><option>Class 12</option></select></div>
+      <div class="form-group"><label>Section</label><select><option>A</option><option>B</option><option>C</option></select></div>
+      <div class="form-group"><label>Date of Birth</label><input type="date"></div>
+      <div class="form-group"><label>Gender</label><select><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div class="form-group"><label>Father's Name</label><input placeholder="Father name"></div>
+      <div class="form-group"><label>Mother's Name</label><input placeholder="Mother name"></div>
+      <div class="form-group"><label>Mobile</label><input placeholder="Parent mobile number"></div>
+      <div class="form-group"><label>Email</label><input type="email" placeholder="parent@email.com"></div>
+      <div class="form-group"><label>Blood Group</label><select><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+    </div>
+    <div class="form-group" style="margin-top:14px"><label>Address</label><textarea rows="2" placeholder="Full address"></textarea></div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="alert('Student added successfully!')">Save Student</button>
+      <button class="btn" style="background:#eee" onclick="toggleForm('add-student-form')">Cancel</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Adm. No</th><th>Student Name</th><th>Class</th><th>Gender</th><th>Parent</th><th>Mobile</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="student-table">
+        <tr><td>MSS-001</td><td>Arjun Kumar</td><td>10-A</td><td>Male</td><td>Ravi Kumar</td><td>9876543210</td><td><span class="badge-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-primary">Edit</button> <button class="btn btn-sm btn-danger">Del</button></td></tr>
+        <tr><td>MSS-002</td><td>Priya Sharma</td><td>9-B</td><td>Female</td><td>Suresh Sharma</td><td>9876543211</td><td><span class="badge-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-primary">Edit</button> <button class="btn btn-sm btn-danger">Del</button></td></tr>
+        <tr><td>MSS-003</td><td>Vikram Singh</td><td>12-A</td><td>Male</td><td>Mohan Singh</td><td>9876543212</td><td><span class="badge-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-primary">Edit</button> <button class="btn btn-sm btn-danger">Del</button></td></tr>
+        <tr><td>MSS-004</td><td>Kavya Reddy</td><td>11-C</td><td>Female</td><td>Anand Reddy</td><td>9876543213</td><td><span class="badge-pill pill-orange">Transfer</span></td><td><button class="btn btn-sm btn-primary">Edit</button> <button class="btn btn-sm btn-danger">Del</button></td></tr>
+        <tr><td>MSS-005</td><td>Rahul Nair</td><td>8-A</td><td>Male</td><td>Saji Nair</td><td>9876543214</td><td><span class="badge-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-primary">Edit</button> <button class="btn btn-sm btn-danger">Del</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TEACHERS -->
+<div class="page" id="page-teachers">
+  <div class="section-hdr"><h3>Teacher Management</h3><button class="btn btn-primary" onclick="toggleForm('add-teacher-form')">+ Add Teacher</button></div>
+  <div id="add-teacher-form" style="display:none" class="form-card">
+    <h4>Add New Teacher</h4>
+    <div class="form-grid">
+      <div class="form-group"><label>Teacher Name</label><input placeholder="Full name"></div>
+      <div class="form-group"><label>Teacher ID</label><input placeholder="MST-2025-XXX"></div>
+      <div class="form-group"><label>Subject</label><select><option>Mathematics</option><option>Science</option><option>English</option><option>Tamil</option><option>History</option><option>Geography</option><option>Computer</option><option>Physical Education</option></select></div>
+      <div class="form-group"><label>Qualification</label><input placeholder="B.Ed, M.Sc..."></div>
+      <div class="form-group"><label>Mobile</label><input placeholder="Mobile number"></div>
+      <div class="form-group"><label>Email</label><input type="email" placeholder="teacher@mahesh.edu"></div>
+      <div class="form-group"><label>Salary (₹)</label><input type="number" placeholder="Monthly salary"></div>
+      <div class="form-group"><label>Join Date</label><input type="date"></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="alert('Teacher added!')">Save Teacher</button>
+      <button class="btn" style="background:#eee" onclick="toggleForm('add-teacher-form')">Cancel</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Teacher ID</th><th>Name</th><th>Subject</th><th>Qualification</th><th>Mobile</th><th>Salary</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>MST-001</td><td>Mrs. Lakshmi Devi</td><td>Mathematics</td><td>M.Sc, B.Ed</td><td>9876540001</td><td>₹42,000</td><td><span class="badge-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+        <tr><td>MST-002</td><td>Mr. Subramaniam</td><td>Science</td><td>M.Sc, B.Ed</td><td>9876540002</td><td>₹40,000</td><td><span class="badge-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+        <tr><td>MST-003</td><td>Ms. Anitha Priya</td><td>English</td><td>MA, B.Ed</td><td>9876540003</td><td>₹38,000</td><td><span class="badge-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+        <tr><td>MST-004</td><td>Mr. Karthik Raja</td><td>Tamil</td><td>MA Tamil, B.Ed</td><td>9876540004</td><td>₹36,000</td><td><span class="badge-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+        <tr><td>MST-005</td><td>Ms. Deepa Menon</td><td>Computer</td><td>MCA, B.Ed</td><td>9876540005</td><td>₹44,000</td><td><span class="badge-pill pill-orange">On Leave</span></td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ATTENDANCE -->
+<div class="page" id="page-attendance">
+  <div class="section-hdr"><h3>Attendance Management</h3></div>
+  <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card"><div class="label">Present Today</div><div class="value" style="color:var(--success)">1,173</div><div class="change">94% of 1248</div></div>
+    <div class="stat-card"><div class="label">Absent Today</div><div class="value" style="color:var(--danger)">75</div><div class="change">6% of 1248</div></div>
+    <div class="stat-card"><div class="label">Teachers Present</div><div class="value" style="color:var(--royal)">82</div><div class="change">95.3% of 86</div></div>
+    <div class="stat-card"><div class="label">Monthly Avg.</div><div class="value" style="color:var(--gold)">91%</div><div class="change">Good Standing</div></div>
+  </div>
+  <div class="two-col">
+    <div class="form-card">
+      <h4>Mark Student Attendance</h4>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+        <div class="form-group"><label>Class</label><select><option>Class 10-A</option><option>Class 9-B</option><option>Class 12-A</option></select></div>
+        <div class="form-group"><label>Date</label><input type="date" value="2025-05-15"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Roll No</th><th>Student Name</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>01</td><td>Arjun Kumar</td><td><select style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px"><option value="P" selected>Present</option><option value="A">Absent</option><option value="L">Late</option></select></td></tr>
+            <tr><td>02</td><td>Priya Sharma</td><td><select style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px"><option value="P" selected>Present</option><option value="A">Absent</option><option value="L">Late</option></select></td></tr>
+            <tr><td>03</td><td>Ravi Chandran</td><td><select style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px"><option value="P">Present</option><option value="A" selected>Absent</option><option value="L">Late</option></select></td></tr>
+            <tr><td>04</td><td>Kavya Reddy</td><td><select style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px"><option value="P" selected>Present</option><option value="A">Absent</option><option value="L">Late</option></select></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="alert('Attendance saved!')">Save Attendance</button>
+    </div>
+    <div class="form-card">
+      <h4>Absent Students – Today</h4>
+      <ul class="notice-list">
+        <li><span class="notice-dot" style="background:var(--danger)"></span><div><div class="title">Ravi Chandran – Class 10-A</div><div class="date">Roll No: 03 | Parent Notified: Yes</div></div></li>
+        <li><span class="notice-dot" style="background:var(--danger)"></span><div><div class="title">Meena Krishnan – Class 9-B</div><div class="date">Roll No: 11 | Parent Notified: No</div></div></li>
+        <li><span class="notice-dot" style="background:var(--danger)"></span><div><div class="title">Arun Prabhu – Class 11-A</div><div class="date">Roll No: 07 | Parent Notified: Yes</div></div></li>
+        <li><span class="notice-dot" style="background:var(--warning)"></span><div><div class="title">Deepika Nair – Class 8-C</div><div class="date">Roll No: 22 | Status: Late</div></div></li>
+      </ul>
+      <button class="btn btn-gold" style="margin-top:12px;font-size:12px" onclick="alert('SMS sent to all parents!')">📱 Notify All Parents</button>
+    </div>
+  </div>
+</div>
+
+<!-- FEES -->
+<div class="page" id="page-fees">
+  <div class="section-hdr"><h3>Fees Management</h3><button class="btn btn-primary" onclick="toggleForm('add-fee-form')">+ Collect Fee</button></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="label">Tuition Fees</div><div class="value" style="color:var(--royal)">₹2.8L</div><div class="change">Collected this month</div></div>
+    <div class="stat-card"><div class="label">Hostel Fees</div><div class="value" style="color:var(--gold)">₹85K</div><div class="change">Collected this month</div></div>
+    <div class="stat-card"><div class="label">Transport Fees</div><div class="value" style="color:var(--success)">₹42K</div><div class="change">Collected this month</div></div>
+    <div class="stat-card"><div class="label">Pending Total</div><div class="value" style="color:var(--danger)">₹1.1L</div><div class="change">142 students</div></div>
+  </div>
+  <div id="add-fee-form" style="display:none" class="form-card">
+    <h4>Collect Fee Payment</h4>
+    <div class="form-grid">
+      <div class="form-group"><label>Admission No.</label><input placeholder="MSS-XXX"></div>
+      <div class="form-group"><label>Fee Type</label><select><option>Tuition</option><option>Hostel</option><option>Transport</option><option>Exam</option><option>Library</option></select></div>
+      <div class="form-group"><label>Amount (₹)</label><input type="number" placeholder="0.00"></div>
+      <div class="form-group"><label>Payment Mode</label><select><option>Cash</option><option>Online Transfer</option><option>Cheque</option><option>DD</option></select></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="showReceipt()">Collect & Print Receipt</button>
+      <button class="btn" style="background:#eee" onclick="toggleForm('add-fee-form')">Cancel</button>
+    </div>
+  </div>
+  <div id="receipt-area" style="display:none;margin-bottom:20px">
+    <div class="receipt">
+      <div class="receipt-hdr">
+        <div style="font-family:'Playfair Display';font-size:20px;font-weight:900;color:var(--navy)">Mahesh School</div>
+        <div style="font-size:12px;color:var(--muted)">Fee Receipt</div>
+      </div>
+      <div class="receipt-row"><span>Receipt No</span><span>#RCP-20250515-001</span></div>
+      <div class="receipt-row"><span>Student Name</span><span>Arjun Kumar</span></div>
+      <div class="receipt-row"><span>Admission No</span><span>MSS-001</span></div>
+      <div class="receipt-row"><span>Class</span><span>10-A</span></div>
+      <div class="receipt-row"><span>Fee Type</span><span>Tuition Fees – Term 2</span></div>
+      <div class="receipt-row"><span>Date</span><span>15 May 2025</span></div>
+      <div class="receipt-row total"><span>Total Amount</span><span>₹8,500</span></div>
+      <div style="text-align:center;margin-top:16px"><button class="btn btn-primary" onclick="window.print()">🖨️ Print Receipt</button></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Receipt No</th><th>Student</th><th>Class</th><th>Fee Type</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>RCP-001</td><td>Arjun Kumar</td><td>10-A</td><td>Tuition</td><td>₹8,500</td><td>May 15</td><td><span class="badge-pill pill-green">Paid</span></td></tr>
+        <tr><td>RCP-002</td><td>Priya Sharma</td><td>9-B</td><td>Tuition + Transport</td><td>₹9,200</td><td>May 14</td><td><span class="badge-pill pill-green">Paid</span></td></tr>
+        <tr><td>RCP-003</td><td>Vikram Singh</td><td>12-A</td><td>Hostel + Tuition</td><td>₹14,500</td><td>May 10</td><td><span class="badge-pill pill-green">Paid</span></td></tr>
+        <tr><td>--</td><td>Ravi Chandran</td><td>10-A</td><td>Tuition</td><td>₹8,500</td><td>--</td><td><span class="badge-pill pill-red">Pending</span></td></tr>
+        <tr><td>--</td><td>Meena Krishnan</td><td>9-B</td><td>Tuition + Hostel</td><td>₹13,000</td><td>--</td><td><span class="badge-pill pill-red">Pending</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- EXAMS -->
+<div class="page" id="page-exams">
+  <div class="section-hdr"><h3>Exam Management</h3><button class="btn btn-primary" onclick="alert('Hall tickets generated!')">📄 Generate Hall Tickets</button></div>
+  <div class="two-col">
+    <div class="form-card">
+      <h4>Enter Marks</h4>
+      <div class="form-grid" style="margin-bottom:16px">
+        <div class="form-group"><label>Class</label><select><option>Class 10-A</option></select></div>
+        <div class="form-group"><label>Subject</label><select><option>Mathematics</option><option>Science</option><option>English</option></select></div>
+        <div class="form-group"><label>Exam Type</label><select><option>Internal</option><option>Semester</option><option>Annual</option></select></div>
+        <div class="form-group"><label>Max Marks</label><input type="number" value="100"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Student</th><th>Marks</th><th>Grade</th></tr></thead>
+          <tbody>
+            <tr><td>Arjun Kumar</td><td><input style="width:70px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;text-align:center" value="88"></td><td><span class="badge-pill pill-green">A+</span></td></tr>
+            <tr><td>Priya Sharma</td><td><input style="width:70px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;text-align:center" value="92"></td><td><span class="badge-pill pill-green">A+</span></td></tr>
+            <tr><td>Ravi Chandran</td><td><input style="width:70px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;text-align:center" value="71"></td><td><span class="badge-pill pill-blue">B</span></td></tr>
+            <tr><td>Kavya Reddy</td><td><input style="width:70px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;text-align:center" value="79"></td><td><span class="badge-pill pill-blue">B+</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="alert('Marks saved!')">Save Marks</button>
+    </div>
+    <div class="form-card">
+      <h4>Rank List – Class 10-A</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rank</th><th>Student</th><th>Total</th><th>%</th><th>Grade</th></tr></thead>
+          <tbody>
+            <tr><td>🥇 1</td><td>Priya Sharma</td><td>552/600</td><td>92%</td><td><span class="badge-pill pill-green">A+</span></td></tr>
+            <tr><td>🥈 2</td><td>Arjun Kumar</td><td>528/600</td><td>88%</td><td><span class="badge-pill pill-green">A+</span></td></tr>
+            <tr><td>🥉 3</td><td>Kavya Reddy</td><td>490/600</td><td>81.7%</td><td><span class="badge-pill pill-blue">B+</span></td></tr>
+            <tr><td>4</td><td>Rahul Nair</td><td>462/600</td><td>77%</td><td><span class="badge-pill pill-blue">B</span></td></tr>
+            <tr><td>5</td><td>Ravi Chandran</td><td>445/600</td><td>74.2%</td><td><span class="badge-pill pill-blue">B</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-gold" style="margin-top:14px;font-size:12px" onclick="alert('Results published!')">📢 Publish Results</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIMETABLE -->
+<div class="page" id="page-timetable">
+  <div class="section-hdr"><h3>Timetable Management</h3></div>
+  <div class="form-card">
+    <h4>Class Timetable – Class 10-A</h4>
+    <div style="overflow-x:auto">
+    <table class="timetable" style="width:100%">
+      <thead><tr><th>Period</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th></tr></thead>
+      <tbody>
+        <tr><td><strong>08:00–08:45</strong></td><td><div class="tt-period">Mathematics</div></td><td><div class="tt-period">English</div></td><td><div class="tt-period">Science</div></td><td><div class="tt-period">Tamil</div></td><td><div class="tt-period">Mathematics</div></td><td><div class="tt-period">Computer</div></td></tr>
+        <tr><td><strong>08:45–09:30</strong></td><td><div class="tt-period">Science</div></td><td><div class="tt-period">Mathematics</div></td><td><div class="tt-period">Tamil</div></td><td><div class="tt-period">English</div></td><td><div class="tt-period">Science</div></td><td><div class="tt-period">Social</div></td></tr>
+        <tr><td><strong>09:30–09:45</strong><br><small style="color:var(--muted)">Break</small></td><td colspan="6"><div class="tt-break">☕ Morning Break</div></td></tr>
+        <tr><td><strong>09:45–10:30</strong></td><td><div class="tt-period">English</div></td><td><div class="tt-period">Science</div></td><td><div class="tt-period">Mathematics</div></td><td><div class="tt-period">Computer</div></td><td><div class="tt-period">Tamil</div></td><td><div class="tt-period">P.T.</div></td></tr>
+        <tr><td><strong>10:30–11:15</strong></td><td><div class="tt-period">Tamil</div></td><td><div class="tt-period">Social</div></td><td><div class="tt-period">English</div></td><td><div class="tt-period">Science</div></td><td><div class="tt-period">Social</div></td><td><div class="tt-period">Art</div></td></tr>
+        <tr><td><strong>11:15–12:00</strong></td><td><div class="tt-period">Social</div></td><td><div class="tt-period">Tamil</div></td><td><div class="tt-period">Computer</div></td><td><div class="tt-period">Mathematics</div></td><td><div class="tt-period">English</div></td><td><div class="tt-period">Activity</div></td></tr>
+        <tr><td><strong>12:00–12:45</strong><br><small style="color:var(--muted)">Lunch</small></td><td colspan="6"><div class="tt-break">🍱 Lunch Break</div></td></tr>
+        <tr><td><strong>12:45–01:30</strong></td><td><div class="tt-period">Computer</div></td><td><div class="tt-period">P.T.</div></td><td><div class="tt-period">Social</div></td><td><div class="tt-period">English</div></td><td><div class="tt-period">Computer</div></td><td colspan="1" style="text-align:center;color:var(--muted)">--</td></tr>
+        <tr><td><strong>01:30–02:15</strong></td><td><div class="tt-period">P.T.</div></td><td><div class="tt-period">Computer</div></td><td><div class="tt-period">P.T.</div></td><td><div class="tt-period">Art</div></td><td><div class="tt-period">Library</div></td><td colspan="1" style="text-align:center;color:var(--muted)">--</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- SUBJECTS -->
+<div class="page" id="page-subjects">
+  <div class="section-hdr"><h3>Subject Management</h3><button class="btn btn-primary" onclick="toggleForm('add-sub-form')">+ Add Subject</button></div>
+  <div id="add-sub-form" style="display:none" class="form-card">
+    <h4>Add Subject</h4>
+    <div class="form-grid">
+      <div class="form-group"><label>Subject Name</label><input placeholder="e.g. Mathematics"></div>
+      <div class="form-group"><label>Subject Code</label><input placeholder="e.g. MATH10"></div>
+      <div class="form-group"><label>Class</label><select><option>All Classes</option><option>Class 10</option><option>Class 11</option><option>Class 12</option></select></div>
+      <div class="form-group"><label>Assigned Teacher</label><select><option>Mrs. Lakshmi Devi</option><option>Mr. Subramaniam</option><option>Ms. Anitha Priya</option></select></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="alert('Subject added!')">Save</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Code</th><th>Subject</th><th>Class</th><th>Teacher</th><th>Periods/Week</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>MATH10</td><td>Mathematics</td><td>Class 10</td><td>Mrs. Lakshmi Devi</td><td>6</td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+        <tr><td>SCI10</td><td>Science</td><td>Class 10</td><td>Mr. Subramaniam</td><td>6</td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+        <tr><td>ENG10</td><td>English</td><td>Class 10</td><td>Ms. Anitha Priya</td><td>5</td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+        <tr><td>TAM10</td><td>Tamil</td><td>Class 10</td><td>Mr. Karthik Raja</td><td>5</td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+        <tr><td>COMP10</td><td>Computer Science</td><td>Class 10</td><td>Ms. Deepa Menon</td><td>4</td><td><button class="btn btn-sm btn-primary">Edit</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LIBRARY -->
+<div class="page" id="page-library">
+  <div class="section-hdr"><h3>Library Management</h3><button class="btn btn-primary" onclick="toggleForm('issue-form')">+ Issue Book</button></div>
+  <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card"><div class="label">Total Books</div><div class="value" style="color:var(--royal)">4,280</div></div>
+    <div class="stat-card"><div class="label">Issued</div><div class="value" style="color:var(--gold)">312</div></div>
+    <div class="stat-card"><div class="label">Overdue</div><div class="value" style="color:var(--danger)">28</div></div>
+    <div class="stat-card"><div class="label">Fine Collected</div><div class="value" style="color:var(--success)">₹1,420</div></div>
+  </div>
+  <div id="issue-form" style="display:none" class="form-card">
+    <h4>Issue / Return Book</h4>
+    <div class="form-grid">
+      <div class="form-group"><label>Book Name / Code</label><input placeholder="Search book"></div>
+      <div class="form-group"><label>Student Admission No.</label><input placeholder="MSS-XXX"></div>
+      <div class="form-group"><label>Issue Date</label><input type="date" value="2025-05-15"></div>
+      <div class="form-group"><label>Return Due Date</label><input type="date"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="alert('Book issued!')">Issue Book</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Book Name</th><th>Author</th><th>Code</th><th>Student</th><th>Issue Date</th><th>Due Date</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Mathematics Class 10</td><td>R.D. Sharma</td><td>LIB-001</td><td>Arjun Kumar</td><td>May 1</td><td>May 20</td><td><span class="badge-pill pill-green">Issued</span></td></tr>
+        <tr><td>Wings of Fire</td><td>A.P.J. Abdul Kalam</td><td>LIB-042</td><td>Priya Sharma</td><td>Apr 20</td><td>May 5</td><td><span class="badge-pill pill-red">Overdue</span></td></tr>
+        <tr><td>Science NCERT</td><td>NCERT</td><td>LIB-103</td><td>Vikram Singh</td><td>May 10</td><td>May 24</td><td><span class="badge-pill pill-green">Issued</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TRANSPORT -->
+<div class="page" id="page-transport">
+  <div class="section-hdr"><h3>Transport Management</h3><button class="btn btn-primary" onclick="toggleForm('bus-form')">+ Add Bus</button></div>
+  <div id="bus-form" style="display:none" class="form-card">
+    <h4>Add Bus Details</h4>
+    <div class="form-grid">
+      <div class="form-group"><label>Bus Number</label><input placeholder="TN-XX-XXXX"></div>
+      <div class="form-group"><label>Driver Name</label><input placeholder="Driver name"></div>
+      <div class="form-group"><label>Driver Mobile</label><input placeholder="Mobile"></div>
+      <div class="form-group"><label>Route</label><input placeholder="Route name / areas"></div>
+      <div class="form-group"><label>Capacity</label><input type="number" placeholder="No. of seats"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="alert('Bus added!')">Save</button>
+  </div>
+  <div class="two-col">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Bus No</th><th>Driver</th><th>Route</th><th>Students</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>TN-01-AB-1234</td><td>Murugan</td><td>Route 1 – North</td><td>42</td><td><span class="badge-pill pill-green">Active</span></td></tr>
+          <tr><td>TN-01-CD-5678</td><td>Selvam</td><td>Route 2 – South</td><td>38</td><td><span class="badge-pill pill-green">Active</span></td></tr>
+          <tr><td>TN-01-EF-9012</td><td>Rajan</td><td>Route 3 – West</td><td>45</td><td><span class="badge-pill pill-orange">Maintenance</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="form-card" style="margin:0">
+      <h4>Student Bus Allocation</h4>
+      <div class="form-grid">
+        <div class="form-group"><label>Student</label><input placeholder="Search student"></div>
+        <div class="form-group"><label>Assign Bus</label><select><option>Route 1 – TN-01-AB-1234</option><option>Route 2 – TN-01-CD-5678</option></select></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:12px" onclick="alert('Allocated!')">Allocate</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOSTEL -->
+<div class="page" id="page-hostel">
+  <div class="section-hdr"><h3>Hostel Management</h3></div>
+  <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card"><div class="label">Total Rooms</div><div class="value" style="color:var(--royal)">60</div></div>
+    <div class="stat-card"><div class="label">Occupied</div><div class="value" style="color:var(--gold)">48</div></div>
+    <div class="stat-card"><div class="label">Vacant</div><div class="value" style="color:var(--success)">12</div></div>
+    <div class="stat-card"><div class="label">Warden</div><div class="value" style="font-size:16px;margin-top:8px" style="color:var(--royal)">Mr. Siva</div></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Room No</th><th>Type</th><th>Capacity</th><th>Occupied</th><th>Students</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>H-101</td><td>4-Sharing</td><td>4</td><td>4</td><td>Arjun, Vikram, Rahul, Arun</td><td><span class="badge-pill pill-red">Full</span></td></tr>
+        <tr><td>H-102</td><td>4-Sharing</td><td>4</td><td>3</td><td>Kiran, Deepak, Mohan</td><td><span class="badge-pill pill-orange">1 Vacant</span></td></tr>
+        <tr><td>H-201</td><td>2-Sharing</td><td>2</td><td>2</td><td>Priya, Kavya</td><td><span class="badge-pill pill-red">Full</span></td></tr>
+        <tr><td>H-202</td><td>2-Sharing</td><td>2</td><td>0</td><td>--</td><td><span class="badge-pill pill-green">Vacant</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- COMMUNICATION -->
+<div class="page" id="page-communication">
+  <div class="section-hdr"><h3>Communication Module</h3></div>
+  <div class="two-col">
+    <div class="form-card">
+      <h4>📱 Send SMS / Email</h4>
+      <div class="form-group" style="margin-bottom:12px"><label>Send To</label><select><option>All Parents</option><option>Class 10 Parents</option><option>All Teachers</option><option>All Students</option><option>Specific Student</option></select></div>
+      <div class="form-group" style="margin-bottom:12px"><label>Channel</label>
+        <div style="display:flex;gap:12px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text)"><input type="checkbox" checked> SMS</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text)"><input type="checkbox" checked> Email</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text)"><input type="checkbox"> WhatsApp</label>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px"><label>Subject</label><input placeholder="Message subject"></div>
+      <div class="form-group" style="margin-bottom:14px"><label>Message</label><textarea rows="5" placeholder="Type your message here..."></textarea></div>
+      <button class="btn btn-primary" onclick="alert('Message sent to all selected recipients!')">📤 Send Now</button>
+    </div>
+    <div class="form-card">
+      <h4>📋 Sent Messages Log</h4>
+      <ul class="notice-list">
+        <li><span class="notice-dot" style="background:var(--success)"></span><div><div class="title">Exam schedule sent to all parents</div><div class="date">May 14 | SMS + Email | 1248 sent</div></div></li>
+        <li><span class="notice-dot" style="background:var(--royal)"></span><div><div class="title">Absent students notified</div><div class="date">May 15 | SMS | 75 sent</div></div></li>
+        <li><span class="notice-dot" style="background:var(--gold)"></span><div><div class="title">Annual Day invitation</div><div class="date">May 12 | Email | 1248 sent</div></div></li>
+        <li><span class="notice-dot" style="background:var(--danger)"></span><div><div class="title">Fee reminder – pending students</div><div class="date">May 10 | SMS | 142 sent</div></div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- EVENTS -->
+<div class="page" id="page-events">
+  <div class="section-hdr"><h3>Events & Notice Board</h3><button class="btn btn-primary" onclick="toggleForm('add-event')">+ Add Event</button></div>
+  <div id="add-event" style="display:none" class="form-card">
+    <h4>Add Event / Notice</h4>
+    <div class="form-grid">
+      <div class="form-group"><label>Title</label><input placeholder="Event/Notice title"></div>
+      <div class="form-group"><label>Type</label><select><option>School Event</option><option>Holiday</option><option>Exam Notice</option><option>Circular</option></select></div>
+      <div class="form-group"><label>Date</label><input type="date"></div>
+      <div class="form-group"><label>Visible To</label><select><option>All</option><option>Students</option><option>Teachers</option><option>Parents</option></select></div>
+    </div>
+    <div class="form-group" style="margin-top:12px"><label>Description</label><textarea rows="3" placeholder="Event details..."></textarea></div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="alert('Event added!')">Save Event</button>
+  </div>
+  <div class="event-cards">
+    <div class="event-card"><div class="event-hdr" style="background:var(--danger)"></div><div class="event-body"><div class="ev-title">📝 Final Exams</div><div class="ev-date">May 20 – June 2, 2025</div><div class="ev-desc">Annual examinations for all classes. Hall tickets available from office.</div></div></div>
+    <div class="event-card"><div class="event-hdr" style="background:var(--gold)"></div><div class="event-body"><div class="ev-title">🎭 Annual Day</div><div class="ev-date">June 10, 2025</div><div class="ev-desc">Cultural programs, prize distribution & parent gathering from 5 PM.</div></div></div>
+    <div class="event-card"><div class="event-hdr" style="background:var(--success)"></div><div class="event-body"><div class="ev-title">🏃 Sports Day</div><div class="ev-date">June 15, 2025</div><div class="ev-desc">Inter-house sports competition at school ground.</div></div></div>
+    <div class="event-card"><div class="event-hdr" style="background:var(--royal)"></div><div class="event-body"><div class="ev-title">🏖️ Summer Vacation</div><div class="ev-date">May 20 – June 12, 2025</div><div class="ev-desc">School closed for summer vacation. New academic year from June 13.</div></div></div>
+    <div class="event-card"><div class="event-hdr" style="background:var(--muted)"></div><div class="event-body"><div class="ev-title">📚 Library Closure</div><div class="ev-date">May 18, 2025</div><div class="ev-desc">All issued books must be returned before this date. Fine after deadline.</div></div></div>
+    <div class="event-card"><div class="event-hdr" style="background:var(--info)"></div><div class="event-body"><div class="ev-title">👨‍👩‍👧 Parent Meeting</div><div class="ev-date">May 17, 2025</div><div class="ev-desc">Progress report discussion for Class 10 & 12 parents. 10 AM onward.</div></div></div>
+  </div>
+</div>
+
+<!-- PARENT PORTAL -->
+<div class="page" id="page-parents">
+  <div class="section-hdr"><h3>Parent Portal</h3></div>
+  <div class="form-card" style="max-width:400px;margin-bottom:22px">
+    <h4>View Student Info</h4>
+    <div class="form-grid" style="grid-template-columns:1fr">
+      <div class="form-group"><label>Admission Number</label><input placeholder="Enter MSS-XXX" id="parent-search"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="showParentData()">View Details</button>
+  </div>
+  <div id="parent-data" style="display:none">
+    <div class="two-col">
+      <div class="form-card">
+        <h4>Arjun Kumar – Class 10-A</h4>
+        <div style="margin-bottom:14px">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px">ATTENDANCE THIS MONTH</div>
+          <div style="display:flex;align-items:center;gap:10px"><div class="progress" style="flex:1"><div class="progress-fill" style="width:94%;background:var(--success)"></div></div><strong style="font-size:14px">94%</strong></div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Internal</th><th>Semester</th><th>Grade</th></tr></thead><tbody>
+          <tr><td>Mathematics</td><td>42/50</td><td>88/100</td><td><span class="badge-pill pill-green">A+</span></td></tr>
+          <tr><td>Science</td><td>45/50</td><td>91/100</td><td><span class="badge-pill pill-green">A+</span></td></tr>
+          <tr><td>English</td><td>38/50</td><td>79/100</td><td><span class="badge-pill pill-blue">B+</span></td></tr>
+          <tr><td>Tamil</td><td>41/50</td><td>84/100</td><td><span class="badge-pill pill-green">A</span></td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="form-card">
+        <h4>Fees & Homework</h4>
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--navy)">Fee Status</div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid #eee"><span>Tuition Fees – Term 2</span><span class="badge-pill pill-green">Paid</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid #eee"><span>Transport Fees</span><span class="badge-pill pill-green">Paid</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0"><span>Exam Fees</span><span class="badge-pill pill-red">Pending</span></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--navy)">Pending Homework</div>
+          <ul class="notice-list">
+            <li><span class="notice-dot" style="background:var(--warning)"></span><div><div class="title">Mathematics – Chapter 8 Exercises</div><div class="date">Due: May 17</div></div></li>
+            <li><span class="notice-dot" style="background:var(--info)"></span><div><div class="title">Science – Lab Report</div><div class="date">Due: May 18</div></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOMEWORK -->
+<div class="page" id="page-homework">
+  <div class="section-hdr"><h3>Homework & Assignments</h3><button class="btn btn-primary" onclick="toggleForm('hw-form')">+ Add Assignment</button></div>
+  <div id="hw-form" style="display:none" class="form-card">
+    <h4>New Assignment</h4>
+    <div class="form-grid">
+      <div class="form-group"><label>Class</label><select><option>Class 10-A</option></select></div>
+      <div class="form-group"><label>Subject</label><select><option>Mathematics</option><option>Science</option><option>English</option></select></div>
+      <div class="form-group"><label>Title</label><input placeholder="Assignment title"></div>
+      <div class="form-group"><label>Due Date</label><input type="date"></div>
+      <div class="form-group"><label>Max Marks</label><input type="number" value="20"></div>
+    </div>
+    <div class="form-group" style="margin-top:12px"><label>Description</label><textarea rows="3" placeholder="Assignment details / instructions"></textarea></div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="alert('Assignment assigned!')">Assign</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subject</th><th>Title</th><th>Class</th><th>Given Date</th><th>Due Date</th><th>Submitted</th><th>Max Marks</th></tr></thead>
+      <tbody>
+        <tr><td>Mathematics</td><td>Chapter 8 Exercises</td><td>10-A</td><td>May 14</td><td>May 17</td><td>28/35</td><td>20</td></tr>
+        <tr><td>Science</td><td>Lab Report – Osmosis</td><td>10-A</td><td>May 13</td><td>May 18</td><td>20/35</td><td>25</td></tr>
+        <tr><td>English</td><td>Essay – Environment</td><td>9-B</td><td>May 12</td><td>May 19</td><td>30/38</td><td>20</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ACCOUNTS -->
+<div class="page" id="page-accounts">
+  <div class="section-hdr"><h3>Accounts Management</h3></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="label">Total Income (May)</div><div class="value" style="color:var(--success)">₹5.2L</div><div class="change">Fees + Other</div></div>
+    <div class="stat-card"><div class="label">Total Expenses</div><div class="value" style="color:var(--danger)">₹2.8L</div><div class="change">Salaries + Ops</div></div>
+    <div class="stat-card"><div class="label">Net Balance</div><div class="value" style="color:var(--royal)">₹2.4L</div><div class="change">This month</div></div>
+    <div class="stat-card"><div class="label">Salary Paid</div><div class="value" style="color:var(--gold)">₹1.9L</div><div class="change">86 teachers</div></div>
+  </div>
+  <div class="two-col">
+    <div class="form-card">
+      <h4>Income Breakdown</h4>
+      <div class="table-wrap"><table><thead><tr><th>Source</th><th>Amount</th><th>%</th></tr></thead><tbody>
+        <tr><td>Tuition Fees</td><td>₹3,20,000</td><td>61.5%</td></tr>
+        <tr><td>Hostel Fees</td><td>₹85,000</td><td>16.3%</td></tr>
+        <tr><td>Transport Fees</td><td>₹42,000</td><td>8.1%</td></tr>
+        <tr><td>Exam Fees</td><td>₹62,400</td><td>12%</td></tr>
+        <tr><td>Library Fine</td><td>₹1,420</td><td>0.3%</td></tr>
+        <tr><td style="font-weight:700">Total</td><td style="font-weight:700">₹5,10,820</td><td style="font-weight:700">100%</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="form-card">
+      <h4>Expense Breakdown</h4>
+      <div class="table-wrap"><table><thead><tr><th>Category</th><th>Amount</th><th>%</th></tr></thead><tbody>
+        <tr><td>Teacher Salaries</td><td>₹1,90,000</td><td>67.9%</td></tr>
+        <tr><td>Staff Salaries</td><td>₹42,000</td><td>15%</td></tr>
+        <tr><td>Utilities</td><td>₹18,000</td><td>6.4%</td></tr>
+        <tr><td>Maintenance</td><td>₹12,000</td><td>4.3%</td></tr>
+        <tr><td>Stationery</td><td>₹8,000</td><td>2.9%</td></tr>
+        <tr><td>Misc</td><td>₹9,800</td><td>3.5%</td></tr>
+        <tr><td style="font-weight:700">Total</td><td style="font-weight:700">₹2,79,800</td><td style="font-weight:700">100%</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<script>
+// Login
+let loggedIn = false;
+let selectedRole = 'Admin';
+function setRole(el, role){
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); selectedRole = role;
+}
+function doLogin(){
+  const u = document.getElementById('l-user').value;
+  const p = document.getElementById('l-pass').value;
+  if(u && p){
+    document.getElementById('login-page').style.display='none';
+  } else { alert('Please enter credentials'); }
+}
+
+// Navigation
+const pageTitles = {
+  dashboard:'Dashboard', students:'Student Management', teachers:'Teacher Management',
+  attendance:'Attendance Management', fees:'Fees Management', exams:'Exam Management',
+  timetable:'Timetable Management', subjects:'Subject Management', library:'Library Management',
+  transport:'Transport Management', hostel:'Hostel Management', communication:'Communication',
+  events:'Events & Notices', parents:'Parent Portal', homework:'Homework & Assignments',
+  accounts:'Accounts Management'
+};
+function showPage(id, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[id] || id;
+}
+function toggleForm(id){
+  const el = document.getElementById(id);
+  el.style.display = el.style.display==='none'?'block':'none';
+}
+function showReceipt(){
+  document.getElementById('receipt-area').style.display='block';
+  toggleForm('add-fee-form');
+}
+function showParentData(){
+  document.getElementById('parent-data').style.display='block';
+}
+
+// Attendance chart
+window.addEventListener('load', ()=>{
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'];
+  const vals = [88,91,87,93,94,0,0,0];
+  const chart = document.getElementById('att-chart');
+  if(!chart) return;
+  chart.innerHTML = months.map((m,i)=>{
+    const h = vals[i] ? (vals[i]-80)*7 : 0;
+    return `<div class="bar-wrap"><div class="bar-val">${vals[i]?vals[i]+'%':''}</div><div class="bar" style="height:${h}px;background:${i===4?'var(--gold)':'var(--royal)'}"></div><div class="bar-lbl">${m}</div></div>`
+  }).join('');
+});
+</script>
+</body>
+</html>
